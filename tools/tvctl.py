@@ -12,7 +12,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'runtime'))
-from tv_connection import SUPPORT, CONFIG, config, run_adb, ensure_connection, adb_env
+from tv_connection import SUPPORT, CONFIG, config, run_adb, ensure_connection, ensure_server
 from authorize import Helper, prepare, apply, restore
 
 
@@ -28,7 +28,6 @@ def main(argv=None):
     init = commands.add_parser('init', help='仅创建本机配置和独立密钥')
     init.add_argument('--host', required=True)
     init.add_argument('--port', type=int, required=True, help='电视 ADB 开关旁显示的当前端口')
-    init.add_argument('--server-port', type=int, default=5041)
     helper = commands.add_parser('helper-config', help='保存诊断服务地址；交互输入凭据')
     helper.add_argument('--host', required=True)
     helper.add_argument('--port', type=int, default=8765)
@@ -55,7 +54,7 @@ def main(argv=None):
         print(json.dumps(result, ensure_ascii=False, indent=2));return 0
     if args.action == 'init':
         ipaddress.IPv4Address(args.host)
-        if not 0 < args.port <= 65535 or not 0 < args.server_port <= 65535:
+        if not 0 < args.port <= 65535:
             raise ValueError('端口范围为 1 到 65535。')
         if CONFIG.exists():raise RuntimeError('配置已存在，init 不覆盖。更新端口使用 connect --port。')
         adb_path = shutil.which('adb')
@@ -64,7 +63,7 @@ def main(argv=None):
         key.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         if not key.exists():subprocess.run([adb_path, 'keygen', str(key)], check=True, capture_output=True)
         key.chmod(0o600)
-        write_private(CONFIG, {'target': f'{args.host}:{args.port}', 'adb_server_port': args.server_port,
+        write_private(CONFIG, {'target': f'{args.host}:{args.port}',
                                'adb_key': str(key), 'adb_path': adb_path})
         print('已创建本机配置和密钥，未连接或修改电视。');return 0
     if args.action == 'helper-config':
@@ -103,7 +102,7 @@ def main(argv=None):
     else:
         if not args.args:raise ValueError('adb 子命令为空。')
         return subprocess.run([c['adb_path'], '-s', c['target']] + args.args,
-                              env=adb_env(c)).returncode
+                              env=ensure_server(c)).returncode
     print(result.stdout.strip())
     if result.stderr:print(result.stderr.strip(), file=sys.stderr)
     return result.returncode

@@ -49,7 +49,13 @@ flowchart LR
 
 ## 连接与文件
 
-`connection.json` 保存目标 IPv4、专用电脑 server 端口、ADB 可执行文件及密钥路径。`helper.json` 保存诊断 HTTP 地址和凭据。两者放在用户支持目录，文件权限为 `0600`，不写入仓库。`TV_CONTROL_HOME` 可以为终端和开发测试指定另一个状态目录；Finder 启动的应用默认使用标准用户支持目录。
+`connection.json` 保存电视地址、ADB 可执行文件及密钥路径。`helper.json` 保存诊断 HTTP 地址和凭据。两者放在用户支持目录，文件权限为 `0600`，不写入仓库。`TV_CONTROL_HOME` 可以为终端和开发测试指定另一个状态目录；Finder 启动的应用默认使用标准用户支持目录。
+
+共享模块根据状态目录和密钥内容生成服务标识，在系统临时目录中使用当前用户私有的 Unix socket，避免多个项目争用固定 TCP 端口。同一配置和身份共用服务，不同配置或密钥分别启动服务。
+
+ADB 子进程的 `HOME` 指向状态目录中的 `adb/<服务标识>/`，其中 `.android/adbkey` 链接到原私钥。主进程和用户终端的 `HOME` 保持原值，外部 `ADB_VENDOR_KEYS` 不传给 ADB。此处保留原密钥，不复制或生成替代身份。
+
+每次 ADB 调用前读取 `server-status` 的 `keystore_path`，确认服务使用该身份目录。路径不符时停止，不接管或终止该服务。原生 ADB 透传和 scrcpy 也使用同一环境；私钥缺失时直接报错。ADB 的默认用户密钥加载方式见[上游实现](https://android.googlesource.com/platform/packages/modules/adb/+/refs/heads/main/client/auth.cpp)。
 
 连接顺序为 `5555`、保存端口、同 IP 的 ADB mDNS 广播。只有实际取得 `device` 状态后才切换电视端口。端口切换属于已授权 shell 操作，不构成首次授权。
 

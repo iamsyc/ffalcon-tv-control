@@ -8,6 +8,7 @@
 
 - 公共源码不包含可直接连接的电视地址、诊断凭据或 ADB 密钥。
 - 使用 `tools/tvctl.py` 和 `runtime/tv_connection.py`，保持独立 server 与密钥一致，不依赖系统默认 `adb devices` 的结果。
+- 本机 ADB 使用按状态目录和密钥隔离的 Unix socket。所有入口调用共享模块核对服务密钥；不要覆盖 `ADB_SERVER_SOCKET`，不要接管或终止其他工具的服务。
 - 默认状态目录为 `~/Library/Application Support/TVControl`。离线测试使用临时目录或 `TV_CONTROL_HOME`，不得覆盖操作者现有状态。
 - APK 签名密钥、ADB 私钥、HTTP 凭据、授权计划和配置备份均为本地文件。不要提交或复制到公开日志。
 

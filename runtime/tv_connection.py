@@ -1,9 +1,11 @@
 """Shared configuration and the verified ADB reconnection procedure."""
 from pathlib import Path
+import hashlib
 import json
 import os
 import shutil
 import subprocess
+import tempfile
 import time
 
 SUPPORT = Path(os.environ.get('TV_CONTROL_HOME', Path.home() / 'Library/Application Support/TVControl'))
@@ -16,15 +18,48 @@ def config():
 
 
 def adb_env(c):
+    key = Path(c['adb_key']).resolve()
+    if not key.is_file():
+        raise RuntimeError('本机 ADB 密钥不存在，请恢复原密钥；不会自动生成新身份。')
+    state = CONFIG.parent.resolve()
+    identity = hashlib.sha256(str(state).encode() + b'\0' + key.read_bytes()).hexdigest()[:20]
+    home = state / 'adb' / identity
+    android = home / '.android'
+    android.mkdir(parents=True, exist_ok=True, mode=0o700)
+    link = android / 'adbkey'
+    try:
+        link.symlink_to(key)
+    except FileExistsError:
+        if not link.is_symlink() or link.resolve() != key:
+            raise RuntimeError('专用 ADB 目录中的密钥与配置不一致，请检查本机状态目录。')
+    sockets = Path(tempfile.gettempdir()) / ('tvcontrol-' + str(os.getuid()))
+    sockets.mkdir(exist_ok=True, mode=0o700)
+    sockets.chmod(0o700)
     env = os.environ.copy()
-    env['ADB_VENDOR_KEYS'] = c['adb_key']
-    env['ANDROID_USER_HOME'] = str(Path(c['adb_key']).parent)
-    env['ADB_SERVER_SOCKET'] = 'tcp:localhost:' + str(c['adb_server_port'])
+    # Only ADB and scrcpy children use this home; the user's HOME stays unchanged.
+    env['HOME'] = str(home)
+    env.pop('ADB_VENDOR_KEYS', None)
+    env.pop('ANDROID_USER_HOME', None)
+    env['ADB_SERVER_SOCKET'] = 'localfilesystem:' + str(sockets / (identity + '.sock'))
+    return env
+
+
+def ensure_server(c):
+    env = adb_env(c)
+    result = subprocess.run([c.get('adb_path', ADB), 'server-status'], env=env,
+                            capture_output=True, text=True, timeout=10)
+    result.check_returncode()
+    field = next((line.split(': ', 1)[1] for line in result.stdout.splitlines()
+                  if line.startswith('keystore_path: ')), None)
+    if field is None:
+        raise RuntimeError('ADB 未提供密钥路径，请安装 Android Platform Tools 37.0.1 或更高版本。')
+    if Path(json.loads(field)) != Path(env['HOME']) / '.android/adbkey':
+        raise RuntimeError('ADB 服务加载了其他密钥，拒绝复用或重启该服务。')
     return env
 
 
 def run_adb(c, args, timeout=10, binary=False):
-    return subprocess.run([c.get('adb_path', ADB)] + args, env=adb_env(c),
+    return subprocess.run([c.get('adb_path', ADB)] + args, env=ensure_server(c),
                           capture_output=True, text=not binary, timeout=timeout)
 
 

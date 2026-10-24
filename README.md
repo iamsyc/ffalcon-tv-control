@@ -89,6 +89,8 @@ python3 tools/tvctl.py connect --port 41783
 
 实现见 [runtime/tv_connection.py](runtime/tv_connection.py)。
 
+电脑端 ADB 服务使用独立 Unix socket，按本机配置和密钥隔离，避免与其他工具争用端口。命令行、控制台和实时窗口共用原项目密钥，调用前检查服务身份；缺失密钥或身份不符时直接报错。
+
 ## 详细文档
 
 | 内容 | 入口 |

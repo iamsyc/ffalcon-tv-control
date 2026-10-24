@@ -9,7 +9,7 @@
 | Python | 3.12 或更高，无第三方 Python 依赖 |
 | Java | `java`、`javac`、`keytool`；整理时用 JDK 24.0.1 构建通过 |
 | Android SDK | `platforms;android-35`、`build-tools;35.0.0` |
-| ADB | Android Platform Tools，含 `keygen`、mDNS；整理时用 37.0.1 |
+| ADB | Android Platform Tools 37.0.1 或更高版本，需提供 `server-status` 的密钥路径、`keygen` 和 mDNS |
 | scrcpy | 客户端严格固定为 5.0.1 |
 | macOS | 构建原生应用需要 Xcode Command Line Tools 中的 `swiftc`、`codesign` |
 | 其他 | `patch`、网络下载上游 scrcpy 源码 |

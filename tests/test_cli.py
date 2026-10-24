@@ -35,7 +35,7 @@ class CliTests(unittest.TestCase):
         config_file = self.folder / 'state/connection.json'
         c = json.loads(config_file.read_text())
         self.assertEqual(c['target'], '192.0.2.10:34961')
-        self.assertEqual(c['adb_server_port'], 5041)
+        self.assertNotIn('adb_server_port', c)
         self.assertEqual(Path(c['adb_key']).stat().st_mode & 0o777, 0o600)
         before = config_file.read_bytes()
         result = self.cli('init', '--host', '192.0.2.20', '--port', '5555')
@@ -51,7 +51,10 @@ class CliTests(unittest.TestCase):
         result = self.cli('init', '--host', '192.0.2.10', '--port', '34961')
         self.assertEqual(result.returncode, 0, result.stderr)
         (self.folder / 'adb').write_text(
-            '#!' + sys.executable + '\nimport sys\n'
+            '#!' + sys.executable + '\nimport sys,os,json\nfrom pathlib import Path\n'
+            'if sys.argv[1:] == ["server-status"]:\n'
+            ' print("keystore_path: "+json.dumps(str(Path(os.environ["HOME"])/".android/adbkey")))\n'
+            ' sys.exit(0)\n'
             'print("Enter pairing code: ", end="", flush=True)\n'
             'code = input()\n'
             'print("PAIR ACCEPTED" if code == "123456" else "BAD CODE")\n')

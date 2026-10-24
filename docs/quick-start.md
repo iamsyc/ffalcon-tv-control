@@ -22,7 +22,7 @@ python3 tools/tvctl.py init --host 192.0.2.10 --port 34961
   keys/adbkey.pub
 ```
 
-项目使用本机专用 ADB server，默认端口为 `5041`，通过 `ADB_SERVER_SOCKET` 和 `ADB_VENDOR_KEYS` 传递配置。保留私钥，避免以后重装电脑时失去身份。`init` 不覆盖已有配置。
+项目按状态目录和密钥分配独立的本机 ADB Unix socket，不占用固定 TCP 端口。ADB 子进程使用专用身份目录，只加载配置中的原密钥；终端继承的 `ADB_VENDOR_KEYS` 和 `ADB_SERVER_SOCKET` 不会改变连接身份。保留私钥，避免以后重装电脑时失去身份。`init` 不覆盖已有配置。
 
 ## 完成首次授权
 
@@ -63,7 +63,7 @@ python3 tools/tvctl.py adb shell getenforce
 open .build/apps/电视控制台.app
 ```
 
-两个 `.app` 保持在同一目录，“实时画面”按钮才能找到“客厅电视.app”。构建目录中的应用可以直接运行；首次复制到 `~/Applications` 可使用 `python3 tools/build.py macos --install`。已有同名应用时，脚本停止，由操作者在 Finder 中明确替换。
+两个 `.app` 保持在同一目录，“实时画面”按钮才能找到 `客厅电视.app`。构建目录中的应用可以直接运行；首次复制到 `~/Applications` 可使用 `python3 tools/build.py macos --install`。已有同名应用时，脚本停止，由操作者在 Finder 中明确替换。
 
 | 功能 | 操作与输出 |
 | --- | --- |

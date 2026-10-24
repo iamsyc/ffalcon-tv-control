@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-24",
+  "scope": "ADB host server and identity isolation; no TV authorization rewrite",
+  "regression_before_fix": {
+    "tests": 8,
+    "passed": 0,
+    "result": "failed"
+  },
+  "python_tests": {
+    "tests": 30,
+    "result": "passed"
+  },
+  "builds": {
+    "android_helper": "passed",
+    "patched_server": "passed",
+    "macos_apps": "passed",
+    "server_path_with_spaces": "passed"
+  },
+  "live_adb": {
+    "server_transport": "private Unix socket",
+    "only_project_key_loaded": true,
+    "foreign_tcp_server_processes_unchanged": true,
+    "original_key_bytes_preserved": true,
+    "restart_and_reconnect": "passed",
+    "device_state": "device",
+    "shell_uid": 2000,
+    "tv_port": 5555
+  },
+  "built_apps": {
+    "shared_runtime_matches_source": true,
+    "console_connected": true,
+    "launchable_apps": 23,
+    "realtime_picture_displayed": true
+  },
+  "limits": [
+    "existing installed app bundles were not replaced",
+    "TV reboot and new authorization were not tested"
+  ]
+}

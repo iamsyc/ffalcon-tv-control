@@ -10,8 +10,6 @@ config=ensure_connection()
 env=adb_env(config)
 env['PATH']=str(Path(config['adb_path']).parent)+':'+env.get('PATH','')
 env['ADB']=config['adb_path']
-env['ADB_VENDOR_KEYS']=config['adb_key']
-env['ADB_SERVER_SOCKET']='tcp:localhost:'+str(config['adb_server_port'])
 env['SCRCPY_SERVER_PATH']=str(resources/'scrcpy-server-tv')
 log=Path.home()/'Library/Logs/TVControl'
 log.mkdir(parents=True,exist_ok=True)
