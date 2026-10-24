@@ -2,9 +2,18 @@
 
 ## 当前交付形态
 
-仓库提供源码、构建入口、文档、自己的 scrcpy 补丁和脱敏验证摘要。首次发布建议提交源码，由使用者在自己的电脑构建。macOS `.app` 当前绑定构建主机的 Python 路径和 Homebrew 库，不作为可跨电脑直接运行的通用下载包。
+仓库提供源码、构建入口、文档、自己的 scrcpy 补丁和脱敏验证摘要。[v0.1.0 Release](https://github.com/iamsyc/ffalcon-tv-control/releases/tag/v0.1.0) 提供已签名的电视端 `tv-debug-entry-v9.apk` 和 `SHA256SUMS.txt`，可直接下载到电视安装。项目版本为 `0.1.0`，电视端应用版本为 `9.0`，`versionCode` 为 `9`。
+
+macOS `.app` 当前绑定构建主机的 Python 路径和 Homebrew 库，需要在使用者的电脑上构建。
 
 README 展示的两个实际软件窗口截图位于 `docs/images/console.png` 和 `docs/images/realtime.png`。发布检查仅允许这两个 PNG 文件；更新时逐张核对，遮盖局域网地址，排除凭据及私人屏幕内容。
+
+## 电视端 APK 发布
+
+1. 使用保留的发布签名密钥运行 `python3 tools/build.py helper`，后续版本沿用同一密钥。
+2. 使用 Android Build Tools 的 `apksigner verify --verbose --print-certs` 和 `zipalign -c 4` 检查 APK，核对包名、版本、最低 Android 版本和文件内容。
+3. 为 APK 生成 `SHA256SUMS.txt`，将 APK 和校验文件上传到对应源码提交的 GitHub Release，不提交签名密钥。
+4. 下载公开 Release 附件，比较 SHA-256 与本地产物，并验证 README 下载链接。
 
 ## 本地检查
 

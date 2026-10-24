@@ -1,5 +1,7 @@
 # 从源码构建
 
+电视端可直接下载 [已签名的 v9 APK](https://github.com/iamsyc/ffalcon-tv-control/releases/download/v0.1.0/tv-debug-entry-v9.apk)，安装方法见 [README](../README.md#电视端-apk-下载与安装)。以下步骤用于自行构建 APK、scrcpy 服务端或 macOS 控制台。
+
 ## 依赖
 
 | 工具 | 要求 |

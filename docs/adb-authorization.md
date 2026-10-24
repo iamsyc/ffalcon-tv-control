@@ -32,11 +32,13 @@ sequenceDiagram
 
 ## 1. 安装并打开诊断工具
 
+直接下载 [电视调试诊断 v9 APK](https://github.com/iamsyc/ffalcon-tv-control/releases/download/v0.1.0/tv-debug-entry-v9.apk)，无需编译。需要自行构建时运行：
+
 ```sh
 python3 tools/build.py helper
 ```
 
-将 `.build/helper/tv-debug-entry-v9.apk` 复制到 U 盘，使用电视已有安装入口安装并打开。实测此工具允许安装；不能由此推断所有 APK 均可安装。电视若拦截该 APK，先记录提示，当前流程没有自动解除安装限制的步骤。
+将下载或自行构建的 `tv-debug-entry-v9.apk` 复制到 U 盘，使用电视已有安装入口安装并打开。实测此工具允许安装；不能由此推断所有 APK 均可安装。电视若拦截该 APK，先记录提示，当前流程没有自动解除安装限制的步骤。
 
 在主界面启用“允许电脑操作设置和运行本工具权限内的命令”，保持诊断服务运行。记录页面上的 IP、HTTP 端口和访问路径中的 32 位凭据。主界面显示的 ADB 端口与 HTTP 的 `8765` 是不同服务。
 

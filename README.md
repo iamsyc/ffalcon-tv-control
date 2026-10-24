@@ -32,13 +32,27 @@
 
 其他雷鸟型号、其他固件、TCL 品牌及其他品牌电视均未测试，不声明支持。功能验证结果见[验证记录](docs/validation.md)。
 
-## 开始使用
+## 电视端 APK 下载与安装
+
+下载 [电视调试诊断 v9 APK](https://github.com/iamsyc/ffalcon-tv-control/releases/download/v0.1.0/tv-debug-entry-v9.apk)，无需自行编译。版本详情和 SHA-256 校验文件见 [v0.1.0 Release](https://github.com/iamsyc/ffalcon-tv-control/releases/tag/v0.1.0)。电视端要求 Android 14 或更高，已验证型号见上表。
+
+1. 将 APK 复制到 U 盘，插入电视。
+2. 用电视的文件管理或 U 盘安装入口打开 APK，按电视提示允许安装并完成确认。
+3. 在电视应用列表打开“电视调试入口检查”，进入“电视调试诊断 v9”。
+4. 需要首次局域网授权时，开启“允许电脑操作设置和运行本工具权限内的命令”，按 [ADB 授权说明](docs/adb-authorization.md)操作。
+
+若覆盖安装提示签名冲突，需先卸载旧版再安装；卸载会清空诊断配置。ADB 授权完成后，日常控制无需持续打开电视端应用。
+
+## 使用 macOS 控制台
+
+macOS 控制台需在本机准备依赖并构建。
 
 1. 电脑与电视连接同一局域网，在电视设置中开启 ADB，记录 IP 和当前随机端口。
 2. 按[构建说明](docs/build.md)准备 Python 3.12+、Android SDK、ADB、scrcpy 5.0.1 和 macOS 编译工具，构建应用：
 
 ```sh
-python3 tools/build.py all
+python3 tools/build.py server
+python3 tools/build.py macos
 ```
 
 3. 创建本机连接配置和独立 ADB 密钥，将示例 IP、端口替换为电视当前值：
