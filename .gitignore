@@ -1,0 +1,16 @@
+.local/
+.build/
+.cache/
+__pycache__/
+*.pyc
+.DS_Store
+*.apk
+*.idsig
+*.keystore
+*.jks
+adbkey
+adbkey.pub
+connection.json
+helper.json
+authorization-plan.json
+*.log

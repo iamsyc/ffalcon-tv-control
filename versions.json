@@ -1,0 +1,8 @@
+{
+  "scrcpy_version": "5.0.1",
+  "scrcpy_source_url": "https://codeload.github.com/Genymobile/scrcpy/tar.gz/refs/tags/v5.0.1",
+  "scrcpy_source_sha256": "a24b996ac23d0f674d3237c00b39a97829d8acbe9e1657a6c216fd51ea488ee5",
+  "android_platform": 35,
+  "android_build_tools": "35.0.0",
+  "project_version": "0.1.0"
+}

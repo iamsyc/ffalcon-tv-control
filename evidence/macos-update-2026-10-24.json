@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-24",
+  "scope": "macOS icon and installed application update; same already-authorized TV connection",
+  "applications": [
+    {
+      "name": "电视控制台",
+      "matches_build_after_launch": true,
+      "codesign_after_launch": "passed",
+      "runtime_cache_inside_bundle": false
+    },
+    {
+      "name": "客厅电视",
+      "matches_build_after_launch": true,
+      "codesign_after_launch": "passed",
+      "runtime_cache_inside_bundle": false
+    }
+  ],
+  "console_status": "connected to authorized TV on fixed port; 23 launchable applications listed",
+  "realtime_window": "TV home screen visibly displayed in updated real-time window",
+  "input_or_performance_retest": false,
+  "android_or_authorization_redeployment": false
+}

@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-23",
+  "scope": "local source packaging and offline checks only; no TV writes or current device acceptance",
+  "host": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "python": "3.15.0",
+    "java": "24.0.1",
+    "adb": "37.0.1-15733141",
+    "scrcpy": "5.0.1",
+    "android_platform": 35,
+    "android_build_tools": "35.0.0"
+  },
+  "checks": {
+    "python_tests": {
+      "passed": true,
+      "count": 22
+    },
+    "helper_host_checks": {
+      "passed": true,
+      "suites": [
+        "CoreChecks (18 assertions)",
+        "AdbChecks",
+        "VendorAdbChecks (7 assertions)",
+        "CommandChecks",
+        "LocalSocket lifecycle"
+      ]
+    },
+    "helper_apk_build": true,
+    "apk_signature_and_alignment": true,
+    "upstream_archive_sha256": true,
+    "scrcpy_patch_applies_and_builds": true,
+    "macos_swift_build": true,
+    "macos_adhoc_signature_verification": true,
+    "public_source_scan_and_document_links": true,
+    "server_build_under_spaced_path": true,
+    "raw_adb_interactive_prompt": true,
+    "source_archive_excludes_device_logs": true,
+    "macos_install_preflight_all_destinations": true,
+    "apk_cleanup_after_upload_error_or_timeout": true,
+    "macos_rebuild_read_only_client": true,
+    "native_install_into_temporary_home_and_signatures": true,
+    "bundled_backend_cleanup_via_simulated_adb_process": true,
+    "source_archive_isolated_extraction_tests": {
+      "passed": true,
+      "public_files": 68,
+      "python_tests": 22,
+      "release_check": true,
+      "real_spaced_path_server_build": true
+    }
+  },
+  "artifacts": {
+    ".build/helper/tv-debug-entry-v9.apk": {
+      "bytes": 49769,
+      "sha256": "2afe89d659ce0df3102b6dd3a9fc43f1fd265995e691adac0ca62ca718d94321"
+    },
+    ".build/server/scrcpy-server": {
+      "bytes": 101852,
+      "sha256": "c8178edf29331233560e2edd62e898079ef87c8cc468f21609fedaa8c1362089"
+    },
+    "macos_apps": [
+      ".build/apps/电视控制台.app",
+      ".build/apps/客厅电视.app"
+    ]
+  },
+  "not_performed": [
+    "TV authorization with the newly packaged CLI",
+    "installation of the new signing-key APK on the TV",
+    "replacing the existing personal applications",
+    "new TV input or video acceptance",
+    "GitHub CI run",
+    "GitHub publishing"
+  ],
+  "regression_red_runs": {
+    "before_review_fixes": {
+      "unit_tests_run": 21,
+      "failed_assertions": 6,
+      "spaced_path_server_build_exit": 1
+    },
+    "before_rebuild_fix": {
+      "install_tests_run": 6,
+      "errors": 1,
+      "error": "PermissionError replacing read-only client copy"
+    }
+  },
+  "review_fixes": [
+    "raw ADB inherits terminal input/output without a fixed session timeout",
+    "quote upstream BUILD_DIR argument",
+    "store click-test logs under .local/device-checks and exclude .log from source archives",
+    "check both macOS install destinations before copying either app",
+    "attempt APK cleanup after push failure or timeout as well as pm install failure",
+    "describe video median, P95 and received FPS separately",
+    "replace the generated read-only scrcpy client copy on rebuild"
+  ]
+}

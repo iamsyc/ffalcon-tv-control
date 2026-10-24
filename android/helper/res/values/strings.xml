@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="accessibility_description">仅在你手动开启后，允许本工具通过带凭据的局域网诊断通道读取当前电视屏幕、截图及操作界面。可在系统中随时关闭。</string>
+</resources>

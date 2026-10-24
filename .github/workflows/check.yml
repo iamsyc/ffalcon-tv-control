@@ -1,0 +1,24 @@
+name: Source checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  host-and-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - run: python3 -m unittest discover -s tests -v
+      - run: python3 tools/check_android.py
+      - run: python3 tools/build.py helper
+      - run: python3 tools/build.py server
+      - run: python3 tests/build_spaces.py
+      - run: python3 tools/check_release.py

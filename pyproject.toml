@@ -1,0 +1,6 @@
+[project]
+name = "ffalcon-tv-control"
+version = "0.1.0"
+description = "Reproducible owner-operated ADB access and macOS control for a tested FFALCON TV firmware"
+requires-python = ">=3.12"
+license = "Apache-2.0"

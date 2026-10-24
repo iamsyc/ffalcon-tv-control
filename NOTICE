@@ -1,0 +1,14 @@
+FFALCON TV Control
+
+The scrcpy server patch is based on scrcpy 5.0.1 by Genymobile and contributors,
+licensed under Apache License 2.0: https://github.com/Genymobile/scrcpy
+The original license is included in licenses/scrcpy-APACHE-2.0.txt.
+
+The Android diagnostic helper, Python utilities, macOS console and documentation
+in this repository are licensed under Apache License 2.0.
+
+TCL, FFALCON, Android and other product names identify tested devices and external
+projects. This is an independent interoperability project.
+
+No TCL firmware images, proprietary APKs, decompiled vendor code, device private
+keys or personal diagnostic exports are distributed in this repository.

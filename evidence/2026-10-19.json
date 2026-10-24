@@ -1,0 +1,161 @@
+{
+  "format": 1,
+  "observed_dates": [
+    "2026-10-18",
+    "2026-10-19"
+  ],
+  "summary_prepared": "2026-10-23",
+  "kind": "sanitized summary derived from private original records, not a new device test",
+  "device": {
+    "brand": "FFALCON",
+    "model": "75S595C Ultra",
+    "system_model": "TCL Smart TV Pro",
+    "android": 14,
+    "api": 34,
+    "firmware": "V8-0015T11-LF1V487.001917",
+    "security_patch": "2025-09-05",
+    "logical_display": [
+      1920,
+      1080
+    ]
+  },
+  "authorization": {
+    "native_adb_verified": true,
+    "config_restored_exactly": true,
+    "public_key_readback_matches": true,
+    "final_config_matches_backup": true,
+    "tv_restart_persistence": "not tested",
+    "adb_state": "device",
+    "uid": 2000,
+    "selinux": "Enforcing",
+    "reconnect_after_client_restart": true,
+    "root_used": false,
+    "firmware_flashed": false
+  },
+  "console": {
+    "launchable_apps": 23,
+    "search_matches": 1,
+    "app_launch_verified": true,
+    "apk_install": {
+      "method": "push then pm install -r",
+      "result": "Success",
+      "scope": "same-version diagnostic APK"
+    },
+    "valid_png_saved": true,
+    "vendor_config_groups": 70,
+    "remote_keys_verified": [
+      "KEYCODE_DPAD_UP",
+      "KEYCODE_DPAD_CENTER"
+    ],
+    "connection_failure_and_recovery": true,
+    "temporary_install_files_remaining": 0
+  },
+  "desktop_wheel": {
+    "upstream": {
+      "desktop": {
+        "down": 0,
+        "up": 0,
+        "repeat": 0,
+        "native_animation": false,
+        "spatial_change": true
+      },
+      "helper": {
+        "desktop_route_used": false,
+        "content_moved": true
+      },
+      "disconnect": {
+        "down": 0,
+        "up": 0,
+        "released": false
+      },
+      "passed": false
+    },
+    "patched": {
+      "desktop": {
+        "down": 1,
+        "up": 1,
+        "repeat": 8,
+        "native_animation": true,
+        "spatial_change": true
+      },
+      "helper": {
+        "desktop_route_used": false,
+        "content_moved": true
+      },
+      "disconnect": {
+        "down": 1,
+        "up": 1,
+        "released": true
+      },
+      "passed": true
+    }
+  },
+  "video_samples": {
+    "video_before": {
+      "fps_cap": 60,
+      "size": 1280,
+      "codec": "h264",
+      "video_sizes": [
+        [
+          1280,
+          720
+        ]
+      ],
+      "workload": "home ScrollView, 8 alternating 600ms wheel sequences at 60 events/s, 100ms gaps",
+      "duration_s": 5.648568166987388,
+      "frames": 249,
+      "received_fps": 44.081967790574055,
+      "pts_interval_ms": {
+        "median": 17.225,
+        "p95": 33.704,
+        "max": 100.0
+      },
+      "arrival_interval_ms": {
+        "median": 20.43595799477771,
+        "p95": 43.82545899716206,
+        "max": 125.40179099596571
+      }
+    },
+    "video_final": {
+      "fps_cap": 45,
+      "size": 1280,
+      "codec": "h264",
+      "video_sizes": [
+        [
+          1280,
+          720
+        ]
+      ],
+      "workload": "home ScrollView, 8 alternating 600ms wheel sequences at 60 events/s, 100ms gaps",
+      "duration_s": 5.64839041599771,
+      "frames": 230,
+      "received_fps": 40.719564877912866,
+      "pts_interval_ms": {
+        "median": 17.23,
+        "p95": 36.397,
+        "max": 100.0
+      },
+      "arrival_interval_ms": {
+        "median": 17.699959003948607,
+        "p95": 64.16408299992327,
+        "max": 197.2217919974355
+      }
+    }
+  },
+  "limits": [
+    "single tested firmware",
+    "no TV reboot persistence test",
+    "no final subjective home-scroll acceptance",
+    "no general backup restore",
+    "no proof of all third-party APK installability",
+    "no complete network privacy audit"
+  ],
+  "private_source_record_sha256": {
+    "authorization": "ab1f2c014d7b1143653fc084df096705c41264f96a5f37f3428305207da242f9",
+    "console": "b696aa8d3db8db18dbee5b8dac276f902a9675de0b9a88eca41a107fa4b94e72",
+    "wheel_red": "9f634faf47c0075476553976337db4947111d644056445c39a314ab5e5fa7e10",
+    "wheel_green": "7288fcf086d3997097b373155d68555dacebd1f1f1544378fca803e6215800be",
+    "video_before": "61674723d1ad52f1c2cc7746c574718cf94529c5ba07499406c862906217dfb8",
+    "video_final": "7283541cb789872bb856239f62c71de2b59f6e35df24c1bd29b02fcd950a1e95"
+  }
+}

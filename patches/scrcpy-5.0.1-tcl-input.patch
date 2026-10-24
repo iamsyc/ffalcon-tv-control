@@ -1,0 +1,229 @@
+--- a/server/src/main/java/com/genymobile/scrcpy/control/Controller.java
++++ b/server/src/main/java/com/genymobile/scrcpy/control/Controller.java
+@@ -108,6 +108,7 @@
+     private final MotionEvent.PointerCoords[] pointerCoords = new MotionEvent.PointerCoords[PointersState.MAX_POINTERS];
+ 
+     private boolean keepDisplayPowerOff;
++    private final TvButtonController tvButtons = new TvButtonController();
+ 
+     // Used for resetting video encoding on RESET_VIDEO message or for sending camera controls
+     private SurfaceCapture surfaceCapture;
+@@ -286,6 +287,7 @@
+                 if (uhidManager != null) {
+                     uhidManager.closeAll();
+                 }
++                tvButtons.close();
+                 listener.onTerminated(true);
+             }
+         }, "control-recv");
+@@ -441,6 +443,7 @@
+     }
+ 
+     private boolean injectKeycode(int action, int keycode, int repeat, int metaState) {
++        tvButtons.stopWheel();
+         if (keepDisplayPowerOff && action == KeyEvent.ACTION_UP && (keycode == KeyEvent.KEYCODE_POWER || keycode == KeyEvent.KEYCODE_WAKEUP)) {
+             assert displayId != Device.DISPLAY_ID_NONE;
+             scheduleDisplayPowerOff(displayId);
+@@ -519,6 +522,13 @@
+ 
+         Point point = pair.first;
+         int targetDisplayId = pair.second;
++
++        if (pointerId == POINTER_ID_MOUSE && targetDisplayId == 0
++                && action != MotionEvent.ACTION_HOVER_MOVE
++                && ((actionButton | buttons) & ~MotionEvent.BUTTON_PRIMARY) == 0
++                && tvButtons.touch(action, point)) {
++            return true;
++        }
+ 
+         int pointerIndex = pointersState.getPointerIndex(pointerId);
+         if (pointerIndex == -1) {
+@@ -631,6 +641,10 @@
+         Point point = pair.first;
+         int targetDisplayId = pair.second;
+ 
++        if (targetDisplayId == 0 && buttons == 0 && tvButtons.scroll(hScroll, vScroll)) {
++            return true;
++        }
++
+         MotionEvent.PointerProperties props = pointerProperties[0];
+         props.id = 0;
+ 
+--- /dev/null
++++ b/server/src/main/java/com/genymobile/scrcpy/control/TvButtonController.java
+@@ -0,0 +1,164 @@
++package com.genymobile.scrcpy.control;
++
++import com.genymobile.scrcpy.model.Point;
++import com.genymobile.scrcpy.device.Device;
++import com.genymobile.scrcpy.util.Ln;
++
++import android.app.UiAutomation;
++import android.graphics.Rect;
++import android.os.HandlerThread;
++import android.os.Handler;
++import android.os.SystemClock;
++import android.view.KeyEvent;
++import android.os.Looper;
++import android.view.MotionEvent;
++import android.view.accessibility.AccessibilityNodeInfo;
++
++/** Route the TCL desktop through its button actions and native scrolling animations. */
++final class TvButtonController {
++    private UiAutomation automation;
++    private HandlerThread thread;
++    private AccessibilityNodeInfo button;
++    private boolean consuming;
++    private boolean dragged;
++    private Point down;
++    private Handler wheelHandler;
++    private boolean wheelDesktop;
++    private long lastWheelEvent;
++    private long lastWheelKey;
++    private float wheelAmount;
++    private int wheelKey;
++    private int wheelRepeat;
++    private final Runnable wheelRelease = this::stopWheel;
++
++    private UiAutomation automation() {
++        if (automation == null) {
++            thread = new HandlerThread("tv-buttons");
++            thread.start();
++            wheelHandler = new Handler(thread.getLooper());
++            try {
++                Object connection = Class.forName("android.app.UiAutomationConnection").getConstructor().newInstance();
++                automation = (UiAutomation) UiAutomation.class
++                        .getConstructor(Looper.class, Class.forName("android.app.IUiAutomationConnection"))
++                        .newInstance(thread.getLooper(), connection);
++                // Keep any owner-enabled accessibility services running.
++                UiAutomation.class.getMethod("connect", int.class).invoke(automation, 1);
++            } catch (ReflectiveOperationException e) {
++                throw new IllegalStateException("Cannot connect TV button controller", e);
++            }
++        }
++        return automation;
++    }
++
++    private static AccessibilityNodeInfo findButton(AccessibilityNodeInfo node, Point point) {
++        Rect bounds = new Rect();
++        node.getBoundsInScreen(bounds);
++        if (!node.isVisibleToUser() || !bounds.contains(point.getX(), point.getY())) {
++            return null;
++        }
++        for (int i = 0; i < node.getChildCount(); ++i) {
++            AccessibilityNodeInfo child = node.getChild(i);
++            if (child != null) {
++                AccessibilityNodeInfo result = findButton(child, point);
++                if (result != null) {
++                    return result;
++                }
++            }
++        }
++        return node.isClickable() && node.isEnabled() ? node : null;
++    }
++
++    boolean touch(int action, Point point) {
++        if (action == MotionEvent.ACTION_DOWN) {
++            stopWheel();
++            AccessibilityNodeInfo root = automation().getRootInActiveWindow();
++            consuming = root != null && "com.tcl.cyberui".contentEquals(root.getPackageName());
++            button = consuming ? findButton(root, point) : null;
++            down = point;
++            dragged = false;
++        }
++        if (!consuming) {
++            return false;
++        }
++        if (action == MotionEvent.ACTION_MOVE) {
++            int dx = point.getX() - down.getX();
++            int dy = point.getY() - down.getY();
++            dragged |= dx * dx + dy * dy > 24 * 24;
++        } else if (action == MotionEvent.ACTION_UP) {
++            if (!dragged && button != null && button.refresh() && button.isVisibleToUser() && button.isEnabled()) {
++                boolean clicked = button.performAction(AccessibilityNodeInfo.ACTION_CLICK);
++                Ln.d("TV button action: " + clicked);
++            }
++            button = null;
++            consuming = false;
++        } else if (action == MotionEvent.ACTION_CANCEL) {
++            button = null;
++            consuming = false;
++        }
++        return true;
++    }
++
++    synchronized boolean scroll(float hScroll, float vScroll) {
++        if (vScroll == 0 || Math.abs(hScroll) > Math.abs(vScroll)) {
++            return false;
++        }
++        long now = SystemClock.uptimeMillis();
++        if (lastWheelEvent == 0 || now - lastWheelEvent > 150) {
++            AccessibilityNodeInfo root = automation().getRootInActiveWindow();
++            wheelDesktop = root != null && "com.tcl.cyberui".contentEquals(root.getPackageName());
++            wheelAmount = 0;
++        }
++        lastWheelEvent = now;
++        if (!wheelDesktop) {
++            return false;
++        }
++        int key = vScroll < 0 ? KeyEvent.KEYCODE_DPAD_DOWN : KeyEvent.KEYCODE_DPAD_UP;
++        if (wheelKey != 0 && wheelKey != key) {
++            stopWheel();
++            lastWheelEvent = now;
++        }
++        if (wheelKey == 0) {
++            wheelAmount += vScroll;
++            if (Math.abs(wheelAmount) < 0.2f) {
++                return true;
++            }
++            wheelKey = wheelAmount < 0 ? KeyEvent.KEYCODE_DPAD_DOWN : KeyEvent.KEYCODE_DPAD_UP;
++            wheelRepeat = 0;
++            lastWheelKey = now;
++            Device.injectKeyEvent(KeyEvent.ACTION_DOWN, wheelKey, 0, 0, 0, Device.INJECT_MODE_ASYNC);
++            Ln.d("TV desktop wheel: down key=" + wheelKey);
++        } else if (now - lastWheelKey >= 80) {
++            lastWheelKey = now;
++            Device.injectKeyEvent(KeyEvent.ACTION_DOWN, wheelKey, ++wheelRepeat, 0, 0, Device.INJECT_MODE_ASYNC);
++            Ln.d("TV desktop wheel: repeat=" + wheelRepeat);
++        }
++        wheelHandler.removeCallbacks(wheelRelease);
++        wheelHandler.postDelayed(wheelRelease, 120);
++        return true;
++    }
++
++    synchronized void stopWheel() {
++        if (wheelHandler != null) {
++            wheelHandler.removeCallbacks(wheelRelease);
++        }
++        if (wheelKey != 0) {
++            Device.injectKeyEvent(KeyEvent.ACTION_UP, wheelKey, 0, 0, 0, Device.INJECT_MODE_ASYNC);
++            Ln.d("TV desktop wheel: up key=" + wheelKey);
++        }
++        wheelKey = 0;
++        wheelAmount = 0;
++        lastWheelEvent = 0;
++    }
++
++    void close() {
++        stopWheel();
++        if (automation != null) {
++            try {
++                UiAutomation.class.getMethod("disconnect").invoke(automation);
++            } catch (ReflectiveOperationException e) {
++                Ln.e("Cannot disconnect TV button controller", e);
++            }
++            thread.quitSafely();
++        }
++    }
++}
+--- a/server/build_without_gradle.sh
++++ b/server/build_without_gradle.sh
+@@ -19,7 +19,7 @@
+ PLATFORM_TOOLS="$ANDROID_HOME/platforms/android-$PLATFORM"
+ BUILD_TOOLS_DIR="$ANDROID_HOME/build-tools/$BUILD_TOOLS"
+ 
+-BUILD_DIR="$(realpath ${BUILD_DIR:-build_manual})"
++BUILD_DIR="$(realpath "${BUILD_DIR:-build_manual}")"
+ CLASSES_DIR="$BUILD_DIR/classes"
+ GEN_DIR="$BUILD_DIR/gen"
+ SERVER_DIR=$(dirname "$0")
