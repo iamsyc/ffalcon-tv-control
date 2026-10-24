@@ -1,80 +1,88 @@
 # FFALCON TV Control
 
-雷鸟电视的局域网 ADB 授权研究、macOS 控制台和实时画面工具。项目包含可构建的 Android 诊断应用、首次授权脚本、连接管理、scrcpy 输入补丁和复现文档。
+雷鸟电视的 macOS 控制工具，提供局域网 ADB 连接、实时画面、应用管理和遥控操作。
 
 已验证的主要成果：
 
-- 在缺少原生配对入口、没有可用 USB 调试连接的电视上，通过局域网完成原生 ADB 授权，取得 `device` 状态和 `uid=2000(shell)`。
-- 通过电脑查看电视实时画面，操作遥控方向键、鼠标点击和桌面滚动。
-- 在原生 macOS 控制台中搜索和打开应用、安装 APK、截图、导出 Android 设置及厂商配置。
-- 在连接已获授权的前提下发现变化的 ADB 端口，将运行中的服务切换到 `5555`。
+- **将电视自带 ADB 开关启用的随机端口切换到固定的 `5555`**，保存连接地址，日常自动重连。
+- 在缺少配对入口、没有可用 USB 调试连接的实测电视上，通过局域网完成首次 ADB 授权，取得 `device` 状态和 `uid=2000(shell)`。
+- 查看电视实时画面，用鼠标、滚轮和键盘操作；修复 TCL 桌面的点击和滚轮输入。
+- 搜索和打开应用、安装 APK、遥控方向与音量、截图、导出 Android 设置和厂商配置。安装已验证同版本诊断 APK 的覆盖安装。
 
-## 软件截图与两个应用的关系
+## 软件界面
 
-“电视控制台”是主入口，负责连接、应用列表、安装 APK、遥控按键、截图和配置备份。“客厅电视”是独立的实时画面窗口，使用 scrcpy 显示电视画面并接收鼠标、键盘输入。点击控制台的“实时画面”即可启动它；两者共用本机连接配置与独立 ADB 密钥，日常打开“电视控制台”即可。
+日常打开“电视控制台”，点击“实时画面”启动“客厅电视”。两个应用共用连接配置与 ADB 密钥，需放在同一目录。
 
 ### 电视控制台
 
-![电视控制台实际运行截图，已连接电视并列出 23 个应用](docs/images/console.png)
+![电视控制台](docs/images/console.png)
 
 ### 客厅电视实时画面
 
-![客厅电视实时窗口，显示雷鸟电视的应用页面](docs/images/realtime.png)
+![客厅电视实时画面](docs/images/realtime.png)
 
-## 已验证型号与品牌范围
-
-目前仅在下列一台雷鸟电视上完成实机验证：
+## 已验证电视
 
 | 项目 | 实测环境 |
 | --- | --- |
 | 电视 | 雷鸟 75S595C Ultra，系统型号 TCL Smart TV Pro |
-| 系统 | Android 14 / API 34，MT9655 |
+| 系统 | Android 14 / API 34 |
 | 固件 | `V8-0015T11-LF1V487.001917` |
-| 安全补丁 | 2025-09-05 |
 | 屏幕 | 物理 3840×2160，实测逻辑坐标 1920×1080 |
-| 电脑 | macOS，Python、ADB、scrcpy 5.0.1 |
 
-| 品牌和型号范围 | 验证状态 |
-| --- | --- |
-| 雷鸟 75S595C Ultra，上述 V487 固件 | 已验证，功能和限制见[验证记录](docs/validation.md) |
-| 雷鸟其他型号或其他固件 | 未测试，不声明支持 |
-| TCL 品牌电视 | 未测试，不声明支持；实测设备的系统型号和桌面包名包含 TCL，不能据此推定 TCL 品牌适用 |
-| 其他品牌电视 | 未测试，不声明支持 |
-
-特殊授权路径依赖该固件的 `IpelEngine` 配置和系统服务行为。已具备正常 ADB 授权的设备可以跳过特殊授权流程，但这不构成其他设备已经适配的证据；TCL 桌面输入补丁只处理 `com.tcl.cyberui`。安装功能仅验证过同版本诊断 APK 覆盖安装，尚未验证任意第三方 APK 均可安装。
+其他雷鸟型号、其他固件、TCL 品牌及其他品牌电视均未测试，不声明支持。功能验证结果见[验证记录](docs/validation.md)。
 
 ## 开始使用
 
-1. 按[构建说明](docs/build.md)准备工具并构建。
-2. 按[快速开始](docs/quick-start.md)创建独立 ADB 密钥和本机配置。
-3. 优先使用系统正常授权或无线配对。入口缺失且固件符合实测条件时，参照[固件专用授权流程](docs/adb-authorization.md)。
-4. 验证 ADB shell 后打开“电视控制台”，点击“实时画面”。
-
-首次特殊授权会**替换电视已有电脑的 ADB 授权列表**。脚本会恢复原始 `IpelEngine` 配置；旧授权列表无法在该阶段读取备份，配置恢复也不会恢复旧公钥。执行前必须阅读授权文档。
+1. 电脑与电视连接同一局域网，在电视设置中开启 ADB，记录 IP 和当前随机端口。
+2. 按[构建说明](docs/build.md)准备 Python 3.12+、Android SDK、ADB、scrcpy 5.0.1 和 macOS 编译工具，构建应用：
 
 ```sh
-# 在仓库根目录执行。示例 IP 必须换成电视实际地址。
+python3 tools/build.py all
+```
+
+3. 创建本机连接配置和独立 ADB 密钥，将示例 IP、端口替换为电视当前值：
+
+```sh
 python3 tools/tvctl.py init --host 192.0.2.10 --port 34961
+```
+
+4. 按[快速开始](docs/quick-start.md)完成电视授权。实测固件缺少授权弹窗和配对入口时，使用[固件专用授权流程](docs/adb-authorization.md)。该流程通过 `IpelEngine` 配置让系统服务写入电脑公钥，再恢复原始配置，无需 root 或刷机。**此流程会替换已有电脑的 ADB 授权，无法恢复旧公钥列表。** 本机项目密钥已获授权时跳过此步。
+5. 连接电视，自动切换到 `5555`，打开控制台：
+
+```sh
 python3 tools/tvctl.py connect
+python3 tools/tvctl.py status
 python3 tools/tvctl.py adb shell id
 open .build/apps/电视控制台.app
 ```
 
-上述连接命令要求该独立密钥已经获得电视授权。首次授权的完整前置步骤见操作文档。
+`status` 应返回 `device`，`id` 应返回 `uid=2000(shell)`。
 
-## 文档与源码
+## ADB 随机端口如何切换到 5555
+
+实测电视自带设置开启的 ADB 使用随机端口，重新开启后可能变化。`connect` 按以下步骤恢复固定端口：
+
+1. 先尝试电视的 `5555`，再尝试保存的端口；连接失败时，通过 mDNS 查找同一 IP 的 ADB 服务。
+2. 确认连接状态为 `device` 后，在当前随机端口上执行 `adb -s 电视IP:当前端口 tcpip 5555`，让电视的 adbd 重启并监听 `5555`。
+3. 重新连接 `电视IP:5555`，确认状态为 `device`，再保存地址供控制台和实时窗口共用。
+
+该操作需要已获授权的 ADB 连接，切换时会短暂断连。设置作用于当前运行的服务；电视重启后保持 `5555` 尚未验证。重启或重新开启 ADB 后若恢复随机端口，再运行 `connect`；自动发现失败时传入电视当前显示的端口：
+
+```sh
+python3 tools/tvctl.py connect --port 41783
+```
+
+实现见 [runtime/tv_connection.py](runtime/tv_connection.py)。
+
+## 详细文档
 
 | 内容 | 入口 |
 | --- | --- |
-| 首次连接、日常控制 | [快速开始](docs/quick-start.md) |
-| 局域网授权原理、执行与恢复 | [ADB 授权](docs/adb-authorization.md) |
-| APK、服务端、macOS 应用构建 | [构建说明](docs/build.md) |
-| 组件、权限和输入处理 | [架构](docs/architecture.md) |
-| 从固件分析到 shell 验证的研究路径 | [研究记录](docs/research.md) |
-| 实机证据、性能与未验证边界 | [验证记录](docs/validation.md) |
-| 证书、端口、安装及连接问题 | [故障排查](docs/troubleshooting.md) |
-| 配置审计和隐私检查 | [配置与隐私](docs/privacy-and-config.md) |
-| 发布和维护 | [贡献指南](CONTRIBUTING.md)、[发布检查](docs/release.md) |
-| AI agent 操作约定 | [AGENTS.md](AGENTS.md) |
+| 连接与日常操作 | [快速开始](docs/quick-start.md) |
+| 首次授权与配置恢复 | [ADB 授权](docs/adb-authorization.md) |
+| 构建与安装 | [构建说明](docs/build.md) |
+| 端口、证书及安装问题 | [故障排查](docs/troubleshooting.md) |
+| 实现原理 | [架构](docs/architecture.md)、[研究记录](docs/research.md) |
 
-源码按 Apache-2.0 发布，scrcpy 补丁保留上游授权说明。项目仅包含上述用于展示的真实软件截图，不包含厂商固件、反编译厂商代码、设备密钥、私人屏幕内容或原始诊断导出。普通 ADB TCP 连接不提供 TLS 加密，仅在受控局域网使用，不向公网转发调试端口。
+[Apache-2.0](LICENSE)。ADB 仅在受控局域网使用，不向公网开放调试端口。
